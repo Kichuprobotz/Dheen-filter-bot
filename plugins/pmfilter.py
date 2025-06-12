@@ -39,7 +39,7 @@ from database.config_db import mdb
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
-import requests
+import aiohttp
 import string
 import tracemalloc
 
