@@ -1,5 +1,5 @@
 import os
-import requests
+import aiohttp
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
