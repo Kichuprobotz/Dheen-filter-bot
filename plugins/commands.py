@@ -296,11 +296,10 @@ if channels:
         
         
     elif data.startswith("all"):
-    files = temp.GETALL.get(file_id)
-    if not files:
-        return await message.reply('<b><i>ɴᴏ ꜱᴜᴄʜ ꜰɪʟᴇ ᴇxɪꜱᴛꜱ !</b></i>')
-    
-    filesarr = []
+        files = temp.GETALL.get(file_id)
+        if not files:
+            return await message.reply('<b><i>ɴᴏ ꜱᴜᴄʜ ꜰɪʟᴇ ᴇxɪꜱᴛꜱ !</b></i>')
+        filesarr = []
     for file in files:
         file_id = file.file_id
         files_ = await get_file_details(file_id)
