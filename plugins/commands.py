@@ -7,11 +7,9 @@ import random
 import asyncio
 import time
 import pytz
-from database.verify_db import vr_db
 from .pmfilter import auto_filter 
 from Script import script
 from datetime import datetime
-from database.refer import referdb
 from database.config_db import mdb
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait
@@ -31,34 +29,42 @@ BATCH_FILES = {}
 
 @Client.on_message(filters.command("start") & filters.incoming)
 async def start(client, message):
-    if EMOJI_MODE:    
-        await message.react(emoji=random.choice(REACTIONS), big=True) 
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         buttons = [[
-                    InlineKeyboardButton('❤️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❤️', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
-                ],[
-                    InlineKeyboardButton('🍁 Update Channel 🍁', url=CHNL_LNK)
-                  ]]
+            InlineKeyboardButton('❤️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ❤️', url=f'http://t.me/{temp.U_NAME}?startgroup=true')
+        ],[
+            InlineKeyboardButton('🍁 Update Channel 🍁', url=CHNL_LNK)
+        ]]
         reply_markup = InlineKeyboardMarkup(buttons)
-        await message.reply(script.GSTART_TXT.format(message.from_user.mention if message.from_user else message.chat.title, temp.U_NAME, temp.B_NAME), reply_markup=reply_markup, disable_web_page_preview=True)
+        await message.reply(
+            script.GSTART_TXT.format(
+                message.from_user.mention if message.from_user else message.chat.title, 
+                temp.U_NAME, 
+                temp.B_NAME
+            ), 
+            reply_markup=reply_markup, 
+            disable_web_page_preview=True
+        )
         await asyncio.sleep(2) 
         if not await db.get_chat(message.chat.id):
-            total=await client.get_chat_members_count(message.chat.id)
+            total = await client.get_chat_members_count(message.chat.id)
             await client.send_message(LOG_CHANNEL, script.LOG_TEXT_G.format(message.chat.title, message.chat.id, total, "Unknown"))       
             await db.add_chat(message.chat.id, message.chat.title)
         return 
+
     if not await db.is_user_exist(message.from_user.id):
         await db.add_user(message.from_user.id, message.from_user.first_name)
         await client.send_message(LOG_CHANNEL, script.LOG_TEXT_P.format(message.from_user.id, message.from_user.mention))
+
     if len(message.command) != 2:
         buttons = [[
-                    InlineKeyboardButton('🔰 ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ 🔰', url=f'http://telegram.me/{temp.U_NAME}?startgroup=true')
-                ],[
-                    InlineKeyboardButton('ᴛᴏᴘ sᴇᴀʀᴄʜɪɴɢ ⭐', callback_data="topsearch"),
-                    InlineKeyboardButton(' ʜᴇʟᴘ 📢', callback_data='help'),
-                ],[
-                    InlineKeyboardButton(' ᴀʙᴏᴜᴛ 📖', callback_data='about'),
-                ]]
+            InlineKeyboardButton('🔰 ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ 🔰', url=f'http://telegram.me/{temp.U_NAME}?startgroup=true')
+        ],[
+            InlineKeyboardButton('ᴛᴏᴘ sᴇᴀʀᴄʜɪɴɢ ⭐', callback_data="topsearch"),
+            InlineKeyboardButton(' ʜᴇʟᴘ 📢', callback_data='help'),
+        ],[
+            InlineKeyboardButton(' ᴀʙᴏᴜᴛ 📖', callback_data='about'),
+        ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         current_time = datetime.now(pytz.timezone(TIMEZONE))
         curr_time = current_time.hour        
@@ -70,7 +76,7 @@ async def start(client, message):
             gtxt = "ɢᴏᴏᴅ ᴇᴠᴇɴɪɴɢ 🌘"
         else:
             gtxt = "ɢᴏᴏᴅ ɴɪɢʜᴛ 🌑"
-        m=await message.reply_text("⏳")
+        m = await message.reply_text("⏳")
         await asyncio.sleep(0.4)
         await m.delete()        
         await message.reply_photo(
@@ -81,8 +87,6 @@ async def start(client, message):
         )
         return
 
-    # Remove all premium, verify, and shortlink related logic here
-    # Accept only "getfile", "BATCH", "DSTORE", and file_id as supported
     data = message.command[1]
     try:
         pre, file_id = data.split('_', 1)
@@ -90,6 +94,7 @@ async def start(client, message):
         file_id = data
         pre = ""
 
+    # BATCH
     if data.split("-", 1)[0] == "BATCH":
         sts = await message.reply("<b>Please wait...</b>")
         file_id = data.split("-", 1)[1]
@@ -112,7 +117,11 @@ async def start(client, message):
 
             if BATCH_FILE_CAPTION:
                 try:
-                    f_caption = BATCH_FILE_CAPTION.format(file_name='' if title is None else title, file_size='' if size is None else size, file_caption='' if f_caption is None else f_caption)
+                    f_caption = BATCH_FILE_CAPTION.format(
+                        file_name='' if title is None else title, 
+                        file_size='' if size is None else size, 
+                        file_caption='' if f_caption is None else f_caption
+                    )
                 except Exception as e:
                     logger.exception(e)
                     f_caption = f_caption
@@ -149,6 +158,7 @@ async def start(client, message):
         await sts.delete()
         return
 
+    # DSTORE
     elif data.split("-", 1)[0] == "DSTORE":
         sts = await message.reply("<b>Please wait...</b>")
         b_string = data.split("-", 1)[1]
@@ -158,18 +168,20 @@ async def start(client, message):
         except:
             f_msg_id, l_msg_id, f_chat_id = decoded.split("_", 2)
             protect = "/pbatch" if PROTECT_CONTENT else "batch"
-        diff = int(l_msg_id) - int(f_msg_id)
         async for msg in client.iter_messages(int(f_chat_id), int(l_msg_id), int(f_msg_id)):
             if msg.media:
                 media = getattr(msg, msg.media.value)
                 if BATCH_FILE_CAPTION:
                     try:
-                        f_caption=BATCH_FILE_CAPTION.format(file_name=getattr(media, 'file_name', ''), file_size=getattr(media, 'file_size', ''), file_caption=getattr(msg, 'caption', ''))
+                        f_caption = BATCH_FILE_CAPTION.format(
+                            file_name=getattr(media, 'file_name', ''), 
+                            file_size=getattr(media, 'file_size', ''), 
+                            file_caption=getattr(msg, 'caption', '')
+                        )
                     except Exception as e:
                         logger.exception(e)
                         f_caption = getattr(msg, 'caption', '')
                 else:
-                    media = getattr(msg, msg.media.value)
                     file_name = getattr(media, 'file_name', '')
                     f_caption = getattr(msg, 'caption', file_name)
                 try:
@@ -194,8 +206,53 @@ async def start(client, message):
             await asyncio.sleep(1) 
         return await sts.delete()
 
-    # Only allow direct file retrieval below
-    user = message.from_user.id
+    # ALL FILES
+    elif data.startswith("all"):
+        files = temp.GETALL.get(file_id)
+        if not files:
+            return await message.reply('<b><i>ɴᴏ ꜱᴜᴄʜ ꜰɪʟᴇ ᴇxɪꜱᴛꜱ !</b></i>')
+        filesarr = []
+        for file in files:
+            file_id = file.file_id
+            files_ = await get_file_details(file_id)
+            files1 = files_[0]
+            title = ' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@') and not x.startswith('www.'), files1.file_name.split()))
+            size = get_size(files1.file_size)
+            f_caption = files1.caption
+
+            if CUSTOM_FILE_CAPTION:
+                try:
+                    f_caption = CUSTOM_FILE_CAPTION.format(
+                        file_name='' if title is None else title, 
+                        file_size='' if size is None else size, 
+                        file_caption='' if f_caption is None else f_caption
+                    )
+                except Exception as e:
+                    logger.exception(e)
+                    f_caption = f_caption
+
+            if f_caption is None:
+                f_caption = f"{title}"
+
+            btn = [
+                [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=CHNL_LNK)]
+            ]
+            msg = await client.send_cached_media(
+                chat_id=message.from_user.id,
+                file_id=file_id,
+                caption=f_caption,
+                protect_content=True if pre == 'filep' else False,
+                reply_markup=InlineKeyboardMarkup(btn)
+            )
+            filesarr.append(msg)
+        k = await client.send_message(chat_id=message.from_user.id, text=f"<b><u>❗️❗️❗️IMPORTANT❗️️❗️❗️</u></b>\n\nᴛʜɪꜱ ᴍᴏᴠɪᴇ ꜰɪʟᴇ/ᴠɪᴅᴇᴏ ...")
+        await asyncio.sleep(20)
+        for x in filesarr:
+            await x.delete()
+        await k.edit_text("<b>ʏᴏᴜʀ ᴀʟʟ ᴠɪᴅᴇᴏꜱ/ꜰɪʟᴇꜱ ᴀʀᴇ ᴅᴇʟᴇᴛᴇᴅ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ !\nᴋɪɴᴅʟʏ ꜱᴇᴀʀᴄʜ ᴀɢᴀɪɴ</b>")
+        return
+
+    # SINGLE FILE
     files_ = await get_file_details(file_id)        
     if not files_:
         pre, file_id = ((base64.urlsafe_b64decode(data + "=" * (-len(data) % 4))).decode("ascii")).split("_", 1)
@@ -209,15 +266,18 @@ async def start(client, message):
                 protect_content=True if pre == 'filep' else False,
                 reply_markup=InlineKeyboardMarkup(btn)
             )
-
             filetype = msg.media
             file = getattr(msg, filetype.value)
             title = ' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@') and not x.startswith('www.'), file.file_name.split()))
-            size=get_size(file.file_size)
+            size = get_size(file.file_size)
             f_caption = f"<code>{title}</code>"
             if CUSTOM_FILE_CAPTION:
                 try:
-                    f_caption=CUSTOM_FILE_CAPTION.format(file_name= '' if title is None else title, file_size='' if size is None else size, file_caption='')
+                    f_caption = CUSTOM_FILE_CAPTION.format(
+                        file_name='' if title is None else title, 
+                        file_size='' if size is None else size, 
+                        file_caption=''
+                    )
                 except:
                     return
             await msg.edit_caption(f_caption)
@@ -226,19 +286,19 @@ async def start(client, message):
             ]]
             k = await msg.reply(
                 f"<b><u>❗️❗️❗️IMPORTANT❗️️❗️❗️</u></b>\n\n"
-                f"ᴛʜɪꜱ ᴍᴏᴠɪᴇ ꜰɪʟᴇ/ᴠɪᴅᴇᴏ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ <b><u><code>{get_time(DELETE_TIME)}</code></u> 🫥 <i></b>"
+                f"ᴛʜɪꜱ ᴍᴏᴠɪᴇ ꜰɪʟᴇ/ᴠɪᴅᴇᴏ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ <b><u><code>{get_time(20)}</code></u> 🫥 <i></b>"
                 "(ᴅᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪꜱꜱᴜᴇꜱ)</i>.\n\n"
                 "<b><i>ᴘʟᴇᴀꜱᴇ ꜰᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ꜰɪʟᴇ ᴛᴏ ꜱᴏᴍᴇᴡʜᴇʀᴇ ᴇʟꜱᴇ ᴀɴᴅ ꜱᴛᴀʀᴛ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴛʜᴇʀᴇ</i></b>",
                 quote=True
             )
-            await asyncio.sleep(DELETE_TIME)
+            await asyncio.sleep(20)
             await msg.delete()
             await k.edit_text("<b>ʏᴏᴜʀ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ɪꜱ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ !!</b>")
             return
         except:
             pass
         return await message.reply('ɴᴏ ꜱᴜᴄʜ ꜰɪʟᴇ ᴇxɪꜱᴛꜱ !')
-    
+
     files = files_[0]
     title = ' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@') and not x.startswith('www.'), files.file_name.split()))
     size = get_size(files.file_size)
@@ -246,13 +306,17 @@ async def start(client, message):
 
     if CUSTOM_FILE_CAPTION:
         try:
-            f_caption=CUSTOM_FILE_CAPTION.format(file_name= '' if title is None else title, file_size='' if size is None else size, file_caption='' if f_caption is None else f_caption)
+            f_caption = CUSTOM_FILE_CAPTION.format(
+                file_name='' if title is None else title, 
+                file_size='' if size is None else size, 
+                file_caption='' if f_caption is None else f_caption
+            )
         except Exception as e:
             logger.exception(e)
             f_caption = f_caption
 
     if f_caption is None:
-        f_caption = ' '.join(filter(lambda x: not x.startswith('[') and not x.startswith('@') and not x.startswith('www.'), files.file_name.split()))
+        f_caption = title
 
     btn = [
         [InlineKeyboardButton('📌 ᴊᴏɪɴ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ 📌', url=CHNL_LNK)]
@@ -265,19 +329,21 @@ async def start(client, message):
         reply_markup=InlineKeyboardMarkup(btn)
     )
     btn = [[
-            InlineKeyboardButton("❗ ɢᴇᴛ ꜰɪʟᴇ ᴀɢᴀɪɴ ❗", callback_data=f'delfile#{file_id}')
-        ]]
+        InlineKeyboardButton("❗ ɢᴇᴛ ꜰɪʟᴇ ᴀɢᴀɪɴ ❗", callback_data=f'delfile#{file_id}')
+    ]]
     k = await msg.reply(
         f"<b><u>❗️❗️❗️IMPORTANT❗️️❗️❗️</u></b>\n\n"
-        f"ᴛʜɪꜱ ᴍᴏᴠɪᴇ ꜰɪʟᴇ/ᴠɪᴅᴇᴏ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ <b><u><code>{get_time(DELETE_TIME)}</code></u> 🫥 <i></b>"
+        f"ᴛʜɪꜱ ᴍᴏᴠɪᴇ ꜰɪʟᴇ/ᴠɪᴅᴇᴏ ᴡɪʟʟ ʙᴇ ᴅᴇʟᴇᴛᴇᴅ ɪɴ <b><u><code>{get_time(20)}</code></u> 🫥 <i></b>"
         "(ᴅᴜᴇ ᴛᴏ ᴄᴏᴘʏʀɪɢʜᴛ ɪꜱꜱᴜᴇꜱ)</i>.\n\n"
         "<b><i>ᴘʟᴇᴀꜱᴇ ꜰᴏʀᴡᴀʀᴅ ᴛʜɪꜱ ꜰɪʟᴇ ᴛᴏ ꜱᴏᴍᴇᴡʜᴇʀᴇ ᴇʟꜱᴇ ᴀɴᴅ ꜱᴛᴀʀᴛ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴛʜᴇʀᴇ</i></b>",
         quote=True
     )     
-    await asyncio.sleep(DELETE_TIME)
+    await asyncio.sleep(20)
     await msg.delete()
     await k.edit_text("<b>ʏᴏᴜʀ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ɪꜱ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ !!</b>")
     return
+
+# --- Rest of the original admin, settings, and other commands remain unchanged. ---
 
 # The rest of the file remains unchanged (admin commands, settings, etc.)
 
