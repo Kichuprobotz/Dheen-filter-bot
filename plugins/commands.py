@@ -267,16 +267,16 @@ if channels:
 
     
     if data.startswith("sendfiles"):
-    current_time = datetime.now(pytz.timezone(TIMEZONE))
-    curr_time = current_time.hour        
-    if curr_time < 12:
-        gtxt = "ɢᴏᴏᴅ ᴍᴏʀɴɪɴɢ 👋" 
-    elif curr_time < 17:
-        gtxt = "ɢᴏᴏᴅ ᴀғᴛᴇʀɴᴏᴏɴ 👋" 
-    elif curr_time < 21:
-        gtxt = "ɢᴏᴏᴅ ᴇᴠᴇɴɪɴɢ 👋"
-    else:
-        gtxt = "ɢᴏᴏᴅ ɴɪɢʜᴛ 👋"
+        current_time = datetime.now(pytz.timezone(TIMEZONE))
+        curr_time = current_time.hour        
+        if curr_time < 12:
+            gtxt = "ɢᴏᴏᴅ ᴍᴏʀɴɪɴɢ 👋" 
+        elif curr_time < 17:
+            gtxt = "ɢᴏᴏᴅ ᴀғᴛᴇʀɴᴏᴏɴ 👋" 
+        elif curr_time < 21:
+            gtxt = "ɢᴏᴏᴅ ᴇᴠᴇɴɪɴɢ 👋"
+        else:
+            gtxt = "ɢᴏᴏᴅ ɴɪɢʜᴛ 👋"
 
     userid = message.from_user.id if message.from_user else None
 
