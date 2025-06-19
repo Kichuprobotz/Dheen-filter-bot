@@ -85,7 +85,38 @@ async def start(client, message):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
+        return  
+    if len(message.command) == 2 and message.command[1].startswith('getfile'):
+        movies = message.command[1].split("-", 1)[1] 
+        movie = movies.replace('-',' ')
+        message.text = movie 
+        await auto_filter(client, message) 
         return
+        # Removed: if not await db.has_premium_access(message.from_user.id):
+channels = (await get_settings(int(message.from_user.id))).get('fsub')
+if channels:  
+    btn = await is_subscribed(client, message, channels)
+    if btn:
+        kk, file_id = message.command[1].split("_", 1)
+        btn.append([InlineKeyboardButton("♻️ ᴛʀʏ ᴀɢᴀɪɴ ♻️", callback_data=f"checksub#{kk}#{file_id}")])
+        reply_markup = InlineKeyboardMarkup(btn)
+        caption = (
+            f"👋 Hello {message.from_user.mention}\n\n"
+            "You have not joined all our *Updates Channels* yet.\n"
+            "Please click the *Join Updates Channels* buttons below and ensure that you join *all* the listed channels.\n"
+            "After that, please try again.\n\n"
+            "आपने हमारे *सभी Updates Channels* को जॉइन नहीं किया है।\n"
+            "कृपया *Join Updates Channels* बटन पर क्लिक करें और सुनिश्चित करें कि आपने *सभी चैनल्स* को जॉइन किया है।\n"
+            "इसके बाद, कृपया फिर से प्रयास करें।"
+        )
+        await message.reply_photo(
+            photo=random.choice(FSUB_PICS),
+            caption=caption,
+            reply_markup=reply_markup,
+            parse_mode=enums.ParseMode.HTML
+        )
+        return
+        
 
     data = message.command[1]
     try:
